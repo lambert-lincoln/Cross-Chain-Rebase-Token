@@ -23,7 +23,7 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
     bytes32 private constant MINT_AND_BURN_ROLE = keccak256("MINT_AND_BURN_ROLE");
 
     // % per second
-    uint256 private s_interestRate = 5e10; // 5e-8 * 1e18
+    uint256 private s_interestRate = (5 * PRECISION_FACTOR) / 1e8; // 5e(18-8)
     mapping(address => uint256) private s_userInterestRate;
     mapping(address => uint256) private s_userLastUpdatedTimestamp;
 
@@ -43,7 +43,7 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
 
     function setInterestRate(uint256 _newInterestRate) external onlyOwner {
         // Set the interest rate
-        if (_newInterestRate >= _newInterestRate) {
+        if (_newInterestRate >= s_interestRate) {
             revert RebaseToken__InterestRateCanOnlyDecrease(s_interestRate, _newInterestRate);
         }
         s_interestRate = _newInterestRate;
@@ -76,8 +76,8 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
 
     /// @notice Calculate the balance for the user including the interest that has acumulate since the last update
     /// @notice (principle balance) + accrued interest
-    /// @param _user - Address of uesr
-    /// @return - the balance of the uesr including the interest that has accumulated since the last update
+    /// @param _user - Address of user
+    /// @return - the balance of the user including the interest that has accumulated since the last update
 
     function balanceOf(address _user) public view virtual override returns (uint256) {
         // get the principle balance (the number of tokens that have actuall been minted to the user)
@@ -148,7 +148,7 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
     /// @param _to - Address of the user to mint the tokens to
     /// @param _amount - uint256 amount of tokens to mint
 
-    function mint(address _to, uint256 _amount) external {
+    function mint(address _to, uint256 _amount) external onlyRole(MINT_AND_BURN_ROLE) {
         _mintAccruedInterest(_to);
         s_userInterestRate[_to] = s_interestRate;
         _mint(_to, _amount);
@@ -159,10 +159,7 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
     /// @param _from - The address of the user to burn the tokens from
     /// @param _amount - The amount of tokens to burn
 
-    function burn(address _from, uint256 _amount) external {
-        if (_amount == type(uint256).max) {
-            _amount = balanceOf(_from);
-        }
+    function burn(address _from, uint256 _amount) external onlyRole(MINT_AND_BURN_ROLE) {
         _mintAccruedInterest(_from);
         _burn(_from, _amount);
     }
