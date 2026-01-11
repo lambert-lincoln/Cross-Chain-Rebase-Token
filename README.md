@@ -1,6 +1,6 @@
 # Cross-chain Rebase Token
 
-** A protcol that allows user to deposit into a vault and in return, receive rebase tokens that represent their underlying balance.**
+**A protcol that allows user to deposit into a vault and in return, receive rebase tokens that represent their underlying balance.**
 
 ## What are Rebase Tokens?
 
