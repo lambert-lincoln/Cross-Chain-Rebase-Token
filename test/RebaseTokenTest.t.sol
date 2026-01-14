@@ -28,9 +28,9 @@ contract RebaseTokenTest is Test {
     }
 
     function addRewardsToVault(uint256 rewardAmount) public {
-        (bool success, ) = payable(address(vault)).call{value: rewardAmount}("");
+        (bool success,) = payable(address(vault)).call{value: rewardAmount}("");
     }
-    
+
     function testDepositLinear(uint256 amount) public {
         vm.assume(amount > 1e5); // ensures that the amount > 1e5
         amount = vm.bound(amount, 1e5, type(uint256).max);
@@ -65,11 +65,11 @@ contract RebaseTokenTest is Test {
         vm.assume(amount > 1e5);
         amount = vm.bound(amount, 1e5, type(uint256).max);
 
-        // 1. deposit 
+        // 1. deposit
         vm.startPrank(user);
         vm.deal(user, amount);
         vault.deposit{value: amount}();
-        
+
         assertEq(rebaseToken.balanceOf(user), amount);
 
         // 2. redeem
@@ -146,7 +146,7 @@ contract RebaseTokenTest is Test {
     function testCannotCallMintAndBurn() public {
         vm.startPrank(user);
         vm.expectPartialRevert(IAccessControl.AccessControlUnauthorizedAccount.selector);
-        rebaseToken.mint(user, 100);
+        rebaseToken.mint(user, 100, IRebaseToken(address(rebaseToken)).getUserInterestRate(user));
         vm.expectPartialRevert(IAccessControl.AccessControlUnauthorizedAccount.selector);
         rebaseToken.burn(user, 100);
         vm.stopPrank();
@@ -176,5 +176,4 @@ contract RebaseTokenTest is Test {
         rebaseToken.setInterestRate(newInterestRate);
         assertEq(rebaseToken.getInterestRate(), initialInterestRate);
     }
-    
 }

@@ -16,23 +16,24 @@ contract Vault {
     event Deposit(address indexed user, uint256 amount);
     event Redeem(address indexed user, uint256 amount);
 
-    constructor (IRebaseToken _rebaseToken) {
+    constructor(IRebaseToken _rebaseToken) {
         i_rebaseToken = _rebaseToken;
     }
 
-    /** 
+    /**
      * @notice The contract will receive ether when another contract uses .call() or .transfer() to send ETH
      * @dev A fallback function for receiving Ether when another contract sends ETH with empty calldata is sent to the contract
      * @dev see docs.soliditylang.org
-    * @dev Must be external and must be payable
-    */
+     * @dev Must be external and must be payable
+     */
 
     receive() external payable {}
 
     /// @notice Allows users to deposit ETH into the vault and mint rebase tokens in return
     function deposit() external payable {
         // 1. we need to uset he amount of ETH the user has sent to mint tokens to the user
-        i_rebaseToken.mint(msg.sender, msg.value);
+        uint256 interestRate = i_rebaseToken.getInterestRate();
+        i_rebaseToken.mint(msg.sender, msg.value, interestRate);
         emit Deposit(msg.sender, msg.value);
     }
 
@@ -50,7 +51,7 @@ contract Vault {
         // 1. burn the tokens from the user
         i_rebaseToken.burn(msg.sender, _amount);
         // 2. we need to send the user ETH
-        (bool success, ) = payable(msg.sender).call{value: _amount}("");
+        (bool success,) = payable(msg.sender).call{value: _amount}("");
         if (!success) {
             revert Vault__RedeemFailed();
         }
